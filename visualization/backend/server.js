@@ -67,24 +67,39 @@ const DOMAIN_QUERIES = {
         }
     },
     capec: {
-        "Q1_sample_capec": {
-            name: "Sample CAPEC Query",
-            sparql: "SELECT * WHERE { ?s ?p ?o } LIMIT 10",
-            cypher: "MATCH (n) RETURN n LIMIT 10"
+        "Q1_all_capec": {
+            name: "All CAPEC Patterns",
+            sparql: `
+                SELECT ?id ?name WHERE {
+                    ?id <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://capec.mitre.org/data/definitions/Pattern> .
+                    ?id <http://www.w3.org/2000/01/rdf-schema#label> ?name .
+                } LIMIT 200
+            `,
+            cypher: "MATCH (n:Resource:CAPEC) RETURN n.id AS id, n.name AS name LIMIT 200"
         }
     },
     cwe: {
-        "Q1_sample_cwe": {
-            name: "Sample CWE Query",
-            sparql: "SELECT * WHERE { ?s ?p ?o } LIMIT 10",
-            cypher: "MATCH (n) RETURN n LIMIT 10"
+        "Q1_all_cwe": {
+            name: "All CWE Weaknesses",
+            sparql: `
+                SELECT ?id ?name WHERE {
+                    ?id <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://cwe.mitre.org/cwe-schema#Weakness> .
+                    ?id <http://www.w3.org/2000/01/rdf-schema#label> ?name .
+                } LIMIT 200
+            `,
+            cypher: "MATCH (n:CWE) RETURN n.id AS id, n.name AS name LIMIT 200"
         }
     },
     attack: {
-        "Q1_sample_attack": {
-            name: "Sample ATT&CK Query",
-            sparql: "SELECT * WHERE { ?s ?p ?o } LIMIT 10",
-            cypher: "MATCH (n) RETURN n LIMIT 10"
+        "Q1_all_attack": {
+            name: "All ATT&CK Patterns",
+            sparql: `
+                SELECT ?id ?name WHERE {
+                    ?id <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://attack.mitre.org/Pattern> .
+                    ?id <http://www.w3.org/2000/01/rdf-schema#label> ?name .
+                } LIMIT 200
+            `,
+            cypher: "MATCH (n:Resource:ATTACK) RETURN n.id AS id, n.name AS name LIMIT 200"
         }
     },
     atlas: {
