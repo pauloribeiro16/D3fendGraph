@@ -1,0 +1,32 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Data files (usually too large to commit)
+data/
+files.zip
+*.tsv
+*.csv
+
+# Database Volumes & State
+graphdb/
+neo4j/
+files/graphdb/
+neo4j/plugins/*.jar
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

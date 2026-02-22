@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UnifiedThreatGraph Visualizer</title>
+    <!-- Modern Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Cytoscape for graph visualization -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.23.0/cytoscape.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- Glassmorphic Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h1>UnifiedThreatGraph</h1>
+            <p>CAPEC, CWE, ATT&CK, ATLAS & D3FEND</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="db-select">Database Engine</label>
+                <select id="db-select">
+                    <option value="graphdb">GraphDB (SPARQL)</option>
+                    <option value="neo4j">Neo4j (Cypher)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="domain-select">Graph Domain</label>
+                <select id="domain-select">
+                    <option value="d3fend">D3FEND</option>
+                    <option value="capec">CAPEC</option>
+                    <option value="cwe">CWE</option>
+                    <option value="attack">MITRE ATT&CK</option>
+                    <option value="atlas">ATLAS</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="query-select">Predefined Query</label>
+                <select id="query-select">
+                    <!-- Loaded dynamically via JS -->
+                </select>
+            </div>
+
+            <button id="run-btn" class="primary-btn">Execute Query</button>
+        </div>
+
+        <div id="status-panel" class="status-panel">
+            <span class="status-indicator"></span>
+            <span class="status-text">Ready</span>
+            <div class="metrics">
+                <div class="metric"><span id="record-count">0</span> records</div>
+                <div class="metric"><span id="query-time">0</span> ms</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- View Toggle -->
+        <div class="view-toggle">
+            <button class="toggle-btn active" data-target="graph">Graph View</button>
+            <button class="toggle-btn" data-target="table">Table View</button>
+        </div>
+
+        <!-- Cytoscape Container -->
+        <div id="graph-container" class="view-container active">
+            <div id="cy"></div>
+        </div>
+
+        <!-- Table Container -->
+        <div id="table-container" class="view-container">
+            <div class="table-wrapper">
+                <table id="data-table">
+                    <thead>
+                        <tr id="table-header">
+                            <!-- Headers injected via JS -->
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Rows injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loading" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <p>Executing Query...</p>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

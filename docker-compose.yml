@@ -1,0 +1,52 @@
+services:
+
+  graphdb:
+    image: ontotext/graphdb:10.6.0
+    container_name: d3fend-graphdb
+    ports:
+      - "7200:7200"
+      - "7300:7300"
+    volumes:
+      - graphdb-data:/opt/graphdb/home
+      - ./graphdb/config:/opt/graphdb/home/data/repositories
+      - ./graphdb/import:/root/graphdb-import
+    environment:
+      GDB_HEAP_SIZE: "2g"
+      GDB_MIN_MEM: "1g"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7200/rest/repositories"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  neo4j:
+    image: neo4j:5.18-community
+    container_name: d3fend-neo4j
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j-data:/data
+      - neo4j-logs:/logs
+      - ./neo4j/plugins:/plugins
+      - ./neo4j/import:/var/lib/neo4j/import
+    environment:
+      NEO4J_AUTH: "neo4j/d3fendtest"
+      NEO4J_dbms_security_procedures_unrestricted: "n10s.*"
+      NEO4J_dbms_security_procedures_allowlist: "n10s.*"
+      NEO4J_server_memory_heap_initial__size: "1g"
+      NEO4J_server_memory_heap_max__size: "2g"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7474"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+
+volumes:
+  graphdb-data:
+  neo4j-data:
+  neo4j-logs:
