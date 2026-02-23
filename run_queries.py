@@ -215,6 +215,121 @@ ORDER BY ?techniqueLabel
 """
   },
 
+  "Q9_cwe_overview": {
+    "label": "CWE Weaknesses Overview",
+    "category": "secondary_frameworks",
+    "query": """
+PREFIX cwe: <http://cwe.mitre.org/cwe-schema#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?cweID ?cweLabel
+WHERE {
+  ?cweID a cwe:Weakness ;
+         rdfs:label ?cweLabel .
+}
+ORDER BY ?cweID
+LIMIT 20
+"""
+  },
+
+  "Q10_capec_overview": {
+    "label": "CAPEC Attack Patterns Overview",
+    "category": "secondary_frameworks",
+    "query": """
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX capec: <http://capec.mitre.org/data/definitions/>
+
+SELECT ?capecID ?capecLabel
+WHERE {
+  ?capecID a capec:Pattern ;
+           rdfs:label ?capecLabel .
+}
+ORDER BY ?capecID
+LIMIT 20
+"""
+  },
+
+  "Q11_atlas_overview": {
+    "label": "ATLAS Attack Patterns Overview",
+    "category": "secondary_frameworks",
+    "query": """
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX atlas: <http://atlas.mitre.org/>
+
+SELECT ?atlasID ?atlasLabel
+WHERE {
+  ?atlasID a atlas:Pattern ;
+           rdfs:label ?atlasLabel .
+}
+ORDER BY ?atlasID
+LIMIT 20
+"""
+  },
+
+  "Q12_injection_across_frameworks": {
+    "label": "Search for 'injection' across CWE, CAPEC, ATLAS, and ATT&CK",
+    "category": "cross_framework",
+    "query": """
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?framework ?id ?label
+WHERE {
+  {
+     ?id a <http://cwe.mitre.org/cwe-schema#Weakness> ;
+         rdfs:label ?label .
+     BIND("CWE" AS ?framework)
+  } UNION {
+     ?id a <http://capec.mitre.org/data/definitions/Pattern> ;
+         rdfs:label ?label .
+     BIND("CAPEC" AS ?framework)
+  } UNION {
+     ?id a <http://atlas.mitre.org/Pattern> ;
+         rdfs:label ?label .
+     BIND("ATLAS" AS ?framework)
+  } UNION {
+     ?id a <http://attack.mitre.org/Pattern> ;
+         rdfs:label ?label .
+     BIND("ATT&CK" AS ?framework)
+  }
+  FILTER(CONTAINS(LCASE(?label), "injection"))
+}
+ORDER BY ?framework
+LIMIT 50
+"""
+  },
+
+  "Q13_phishing_across_frameworks": {
+    "label": "Search for 'phishing' across CWE, CAPEC, ATLAS, and ATT&CK",
+    "category": "cross_framework",
+    "query": """
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?framework ?id ?label
+WHERE {
+  {
+     ?id a <http://cwe.mitre.org/cwe-schema#Weakness> ;
+         rdfs:label ?label .
+     BIND("CWE" AS ?framework)
+  } UNION {
+     ?id a <http://capec.mitre.org/data/definitions/Pattern> ;
+         rdfs:label ?label .
+     BIND("CAPEC" AS ?framework)
+  } UNION {
+     ?id a <http://atlas.mitre.org/Pattern> ;
+         rdfs:label ?label .
+     BIND("ATLAS" AS ?framework)
+  } UNION {
+     ?id a <http://attack.mitre.org/Pattern> ;
+         rdfs:label ?label .
+     BIND("ATT&CK" AS ?framework)
+  }
+  FILTER(CONTAINS(LCASE(?label), "phishing"))
+}
+ORDER BY ?framework
+LIMIT 50
+"""
+  },
+
 }
 
 

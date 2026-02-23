@@ -12,9 +12,9 @@
    rep:repositoryID "d3fend" ;
    rdfs:label "D3FEND Ontology Repository" ;
    rep:repositoryImpl [
-      rep:repositoryType "graphdb:FreeSailRepository" ;
+      rep:repositoryType "graphdb:SailRepository" ;
       sr:sailImpl [
-         sail:sailType "graphdb:FreeSail" ;
+         sail:sailType "graphdb:Sail" ;
          owlim:base-URL "https://d3fend.mitre.org/ontologies/d3fend.owl#" ;
          owlim:defaultNS "https://d3fend.mitre.org/ontologies/d3fend.owl#" ;
          owlim:entity-index-size "10000000" ;

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3FEND Viewer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.23.0/cytoscape.min.js"></script>
+    <link rel="stylesheet" href="shared.css">
+</head>
+
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">UnifiedThreatGraph</a>
+        <a href="index.html" class="nav-btn">🏠 Hub</a>
+        <a href="d3fend.html" class="nav-btn active" data-fw="d3fend">D3FEND</a>
+        <a href="cwe.html" class="nav-btn" data-fw="cwe">CWE</a>
+        <a href="capec.html" class="nav-btn" data-fw="capec">CAPEC</a>
+        <a href="attack.html" class="nav-btn" data-fw="attack">ATT&amp;CK</a>
+        <a href="atlas.html" class="nav-btn" data-fw="atlas">ATLAS</a>
+        <a href="dss.html" class="nav-btn" data-fw="dss">🤖 DSS</a>
+        <a href="relationships.html" class="nav-btn" data-fw="relationships">🔗 Chains</a>
+    </nav>
+
+    <div class="page-body">
+        <aside class="sidebar">
+            <div>
+                <div class="sidebar-title" style="color:var(--green);">D3FEND</div>
+                <div class="sidebar-desc">MITRE D3FEND — Defensive techniques mapped to ATT&amp;CK attack patterns.
+                </div>
+            </div>
+
+            <div class="ctrl-group">
+                <label class="ctrl-label">Database</label>
+                <select id="db-sel">
+                    <option value="graphdb">GraphDB (SPARQL)</option>
+                    <option value="neo4j">Neo4j (Cypher)</option>
+                </select>
+            </div>
+
+            <div class="ctrl-group">
+                <label class="ctrl-label">Query</label>
+                <select id="query-sel">
+                    <!-- populated dynamically -->
+                </select>
+            </div>
+
+            <div class="ctrl-group">
+                <label class="ctrl-label">Layout</label>
+                <select id="layout-sidebar">
+                    <option value="cose">Force-directed</option>
+                    <option value="breadthfirst">Tree</option>
+                    <option value="concentric">Concentric</option>
+                    <option value="circle">Circle</option>
+                </select>
+            </div>
+
+            <button class="run-btn" id="run-btn" style="background:linear-gradient(135deg,#115929,#3fb950);">Run
+                Query</button>
+
+            <div class="info-card" id="info-card"
+                style="background:var(--sidebar-bg);border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem;font-size:.8rem;line-height:1.6;color:var(--muted);display:none;">
+                <div id="ic-id" style="color:var(--green);font-weight:700;font-size:.9rem;">—</div>
+                <div id="ic-name" style="color:var(--text);font-weight:600;margin-bottom:.5rem;"></div>
+                <div
+                    style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-top:.4rem;">
+                    Type</div>
+                <div id="ic-type" style="color:var(--text);font-size:.8rem;">—</div>
+            </div>
+
+            <div class="metrics-row">
+                <div>Nodes: <span id="node-count">0</span></div>
+                <div>Edges: <span id="edge-count">0</span></div>
+                <div><span id="query-time">—</span> ms</div>
+            </div>
+        </aside>
+
+        <main class="main-area">
+            <div class="view-toggle">
+                <button class="vtbtn active" data-target="graph">Graph</button>
+                <button class="vtbtn" data-target="table">Table</button>
+            </div>
+
+            <div id="graph-panel" class="panel active">
+                <div id="cy"></div>
+                <div class="graph-toolbar">
+                    <div class="toolbar-search">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" style="opacity:0.5">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <input type="text" id="search" placeholder="Search nodes…">
+                        <button id="search-clear">×</button>
+                    </div>
+                    <select class="layout-sel" id="layout-sel">
+                        <option value="cose">Force</option>
+                        <option value="breadthfirst">Tree</option>
+                        <option value="concentric">Concentric</option>
+                        <option value="circle">Circle</option>
+                    </select>
+                    <div class="zoom-controls">
+                        <button class="zoom-btn" id="zi">+</button>
+                        <button class="zoom-btn" id="zf">⊡</button>
+                        <button class="zoom-btn" id="zo">−</button>
+                    </div>
+                </div>
+                <div class="inner-loading hidden" id="loading">
+                    <div class="spinner"></div>
+                    <p style="font-size:.85rem;color:#8b949e;">Loading D3FEND…</p>
+                </div>
+            </div>
+
+            <div id="table-panel" class="panel">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr id="thead"></tr>
+                        </thead>
+                        <tbody id="tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="core.js"></script>
+    <script>
+        let cy;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            cy = initCy(document.getElementById('cy'));
+
+            // D3FEND-specific Cytoscape style: green = defense, red = attack
+            cy.style().selector('node[type="defense"]').style({ 'border-color': '#3fb950' })
+                .selector('node[type="attack"]').style({ 'border-color': '#f85149' }).update();
+
+            cy.on('tap', 'node', evt => {
+                const d = evt.target.data();
+                document.getElementById('ic-id').textContent = d.id || '—';
+                document.getElementById('ic-name').textContent = d.label || '—';
+                document.getElementById('ic-type').textContent = d.type || '—';
+                document.getElementById('info-card').style.display = 'block';
+            });
+            cy.on('tap', evt => { if (evt.target === cy) document.getElementById('info-card').style.display = 'none'; });
+
+            document.querySelectorAll('.vtbtn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    document.querySelectorAll('.vtbtn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                    e.target.classList.add('active');
+                    document.getElementById(`${e.target.dataset.target}-panel`).classList.add('active');
+                    if (e.target.dataset.target === 'graph') setTimeout(() => cy.fit(undefined, 40), 50);
+                });
+            });
+
+            document.getElementById('layout-sidebar').addEventListener('change', e => {
+                document.getElementById('layout-sel').value = e.target.value;
+                if (cy) runLayout(cy, e.target.value);
+            });
+
+            wireToolbar(cy, {
+                searchInput: document.getElementById('search'),
+                clearBtn: document.getElementById('search-clear'),
+                layoutSel: document.getElementById('layout-sel'),
+                zoomIn: document.getElementById('zi'),
+                zoomOut: document.getElementById('zo'),
+                zoomFit: document.getElementById('zf')
+            });
+
+            const querySel = document.getElementById('query-sel');
+            const QUERIES = [
+                { id: 'Q1_all_attack_to_d3fend', label: '🛡️ All ATT&CK → D3FEND', group: 'Overview' },
+                { id: 'Q2_platform_hardening', label: '🛡️ Platform Hardening', group: 'Defense Domains' },
+                { id: 'Q3_network_isolation', label: '🌐 Network Isolation', group: 'Defense Domains' },
+                { id: 'Q4_deceptive_defenses', label: '👺 Deception & Decoys', group: 'Deception' },
+                { id: 'Q5_analysis_defenses', label: '🔍 Analysis Techniques', group: 'Monitoring' },
+                { id: 'Q6_credential_protection', label: '🔑 Credential Protection', group: 'Defense Domains' },
+                { id: 'Q7_data_protection', label: '📦 Data Exfiltration Defenses', group: 'Defense Domains' },
+                { id: 'Q8_message_filtering', label: '✉️ Message Filtering', group: 'Defense Domains' },
+                { id: 'Q9_system_config_hardening', label: '⚙️ System Configuration Hardening', group: 'Hardening' },
+                { id: 'Q10_os_hardening', label: '💻 Operating System Hardening', group: 'Hardening' }
+            ];
+
+            function populateQueries() {
+                querySel.innerHTML = '';
+                const groups = {};
+                QUERIES.forEach(q => {
+                    const groupName = q.group || 'General';
+                    if (!groups[groupName]) {
+                        groups[groupName] = document.createElement('optgroup');
+                        groups[groupName].label = groupName;
+                        querySel.appendChild(groups[groupName]);
+                    }
+                    const opt = document.createElement('option');
+                    opt.value = q.id; opt.textContent = q.label;
+                    groups[groupName].appendChild(opt);
+                });
+            }
+
+            populateQueries();
+
+            document.getElementById('run-btn').addEventListener('click', runQuery);
+            runQuery();
+        });
+
+        async function runQuery() {
+            const db = document.getElementById('db-sel').value;
+            const queryId = document.getElementById('query-sel').value;
+            const layout = document.getElementById('layout-sidebar').value;
+
+            document.getElementById('loading').classList.remove('hidden');
+            try {
+                const t0 = performance.now();
+                const qRes = await fetch(`${API}/domains/d3fend/queries/${queryId}`);
+                const qObj = await qRes.json();
+                const queryStr = db === 'graphdb' ? qObj.sparql : qObj.cypher;
+
+                const res = await fetch(`${API}/${db}/query`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: queryStr })
+                });
+                const raw = await res.json();
+                const rows = normalise(db, raw);
+                const ms = Math.round(performance.now() - t0);
+
+                // D3FEND has defensiveLabel / attackLabel — remap to source/target
+                const remapped = rows.map(r => ({
+                    sourceId: r.defensiveLabel || r.d3fID || r.techniqueLabel,
+                    sourceName: r.defensiveLabel || r.techniqueLabel,
+                    sourceType: 'defense',
+                    targetId: r.attackLabel,
+                    targetName: r.attackLabel,
+                    targetType: 'attack'
+                }));
+
+                const elements = buildElements(remapped, { nodeColor: '#3fb950', parentColor: '#f85149', relLabel: 'COUNTERS' });
+
+                // Tag types
+                elements.forEach(el => {
+                    if (!el.data.source) { // node
+                        const row = remapped.find(r => r.sourceId === el.data.id);
+                        el.data.type = row ? 'defense' : 'attack';
+                    }
+                });
+
+                cy.elements().remove();
+                cy.add(elements);
+                cy.style().selector('node[type="defense"]').style({ 'border-color': '#3fb950' })
+                    .selector('node[type="attack"]').style({ 'border-color': '#f85149' }).update();
+                runLayout(cy, layout);
+
+                document.getElementById('node-count').textContent = cy.nodes().length;
+                document.getElementById('edge-count').textContent = cy.edges().length;
+                document.getElementById('query-time').textContent = ms;
+                renderTable(rows, document.getElementById('thead'), document.getElementById('tbody'));
+            } catch (e) {
+                console.error(e); alert('Query failed: ' + e.message);
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+
+</html>

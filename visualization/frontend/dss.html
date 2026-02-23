@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSS — AI Security Advisor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        body {
+            overflow: auto;
+        }
+
+        .dss-wrap {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 60px 24px 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .dss-heading {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #d2a8ff, #79c0ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .dss-sub {
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .input-card {
+            background: var(--sidebar-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .row2 {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .row2 .ctrl-group {
+            flex: 1;
+            min-width: 160px;
+        }
+
+        textarea {
+            background: rgba(13, 17, 23, 0.8);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 8px;
+            padding: 1rem;
+            font-size: 0.92rem;
+            font-family: var(--font);
+            resize: vertical;
+            min-height: 110px;
+            outline: none;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+
+        textarea:focus {
+            border-color: #9333ea;
+            box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.2);
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #6b21a8, #9333ea);
+            color: #fff;
+            border: none;
+            padding: 0.85rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: var(--font);
+            transition: transform 0.1s, box-shadow 0.2s;
+            align-self: flex-start;
+        }
+
+        .submit-btn:hover {
+            box-shadow: 0 4px 14px rgba(147, 51, 234, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .dss-loading {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .response-card {
+            background: var(--sidebar-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .response-hdr {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+        }
+
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 3px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-family: var(--font);
+        }
+
+        pre#answer {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: var(--font);
+            font-size: 0.9rem;
+            line-height: 1.75;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+        }
+
+        .sources-section h4 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+            margin-bottom: 0.6rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .chip {
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.25);
+            color: #79c0ff;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">UnifiedThreatGraph</a>
+        <a href="index.html" class="nav-btn">🏠 Hub</a>
+        <a href="d3fend.html" class="nav-btn" data-fw="d3fend">D3FEND</a>
+        <a href="cwe.html" class="nav-btn" data-fw="cwe">CWE</a>
+        <a href="capec.html" class="nav-btn" data-fw="capec">CAPEC</a>
+        <a href="attack.html" class="nav-btn" data-fw="attack">ATT&amp;CK</a>
+        <a href="atlas.html" class="nav-btn" data-fw="atlas">ATLAS</a>
+        <a href="dss.html" class="nav-btn" data-fw="dss">🤖 DSS</a>
+        <a href="relationships.html" class="nav-btn" data-fw="relationships">🔗 Chains</a>
+    </nav>
+
+    <main style="flex:1;overflow:auto;">
+        <div class="dss-wrap">
+            <div>
+                <div class="dss-heading">🤖 AI-Driven Decision Support System</div>
+                <div class="dss-sub">Describe your security requirement and the AI will retrieve relevant nodes from the
+                    Unified Knowledge Graph (CWE, CAPEC, ATT&amp;CK, ATLAS, D3FEND) and generate targeted
+                    recommendations.</div>
+            </div>
+
+            <div class="input-card">
+                <div class="row2">
+                    <div class="ctrl-group">
+                        <label class="ctrl-label">LLM Backend</label>
+                        <select id="backend">
+                            <option value="ollama">Ollama (Local — llama3.2)</option>
+                            <option value="openai">OpenAI (gpt-4o-mini)</option>
+                        </select>
+                    </div>
+                    <div class="ctrl-group">
+                        <label class="ctrl-label">Top-K Results</label>
+                        <select id="topk">
+                            <option value="8">8 nodes</option>
+                            <option value="12" selected>12 nodes</option>
+                            <option value="20">20 nodes</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="ctrl-label">Security Requirement</label>
+                    <textarea id="question"
+                        placeholder="e.g. We need to protect our web API from SQL injection and credential stuffing attacks…"></textarea>
+                </div>
+
+                <button class="submit-btn" id="submit">Analyze with AI →</button>
+            </div>
+
+            <div class="dss-loading hidden" id="dss-loading">
+                <div class="spinner"></div>
+                <span>Reasoning over the Knowledge Graph… this may take 30–60 seconds.</span>
+            </div>
+
+            <div class="response-card hidden" id="response-card">
+                <div class="response-hdr">
+                    <span>AI Analysis</span>
+                    <button class="copy-btn" id="copy-btn">Copy</button>
+                </div>
+                <pre id="answer"></pre>
+                <div class="sources-section">
+                    <h4>Retrieved Knowledge Graph Sources</h4>
+                    <div class="chips" id="chips"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API = 'http://localhost:3000/api';
+
+        document.getElementById('submit').addEventListener('click', async () => {
+            const question = document.getElementById('question').value.trim();
+            const backend = document.getElementById('backend').value;
+            const topK = parseInt(document.getElementById('topk').value, 10);
+
+            if (!question) return;
+
+            document.getElementById('dss-loading').classList.remove('hidden');
+            document.getElementById('response-card').classList.add('hidden');
+            document.getElementById('submit').disabled = true;
+
+            try {
+                const res = await fetch(`${API}/dss/query`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question, backend, topK })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    document.getElementById('answer').textContent = `Error: ${err.error}\n\n${err.details || ''}`;
+                } else {
+                    const data = await res.json();
+                    document.getElementById('answer').textContent = data.answer || 'No response.';
+
+                    const chips = document.getElementById('chips');
+                    chips.innerHTML = '';
+                    (data.sources || []).forEach(s => {
+                        const chip = document.createElement('span');
+                        chip.className = 'chip';
+                        chip.textContent = `${s.id} — ${(s.name || '').slice(0, 45)}`;
+                        chips.appendChild(chip);
+                    });
+                }
+
+                document.getElementById('dss-loading').classList.add('hidden');
+                document.getElementById('response-card').classList.remove('hidden');
+            } catch (e) {
+                document.getElementById('answer').textContent = `Connection error: ${e.message}`;
+                document.getElementById('dss-loading').classList.add('hidden');
+                document.getElementById('response-card').classList.remove('hidden');
+            } finally {
+                document.getElementById('submit').disabled = false;
+            }
+        });
+
+        document.getElementById('copy-btn').addEventListener('click', () => {
+            navigator.clipboard.writeText(document.getElementById('answer').textContent)
+                .then(() => { document.getElementById('copy-btn').textContent = 'Copied!'; setTimeout(() => document.getElementById('copy-btn').textContent = 'Copy', 2000); });
+        });
+    </script>
+</body>
+
+</html>

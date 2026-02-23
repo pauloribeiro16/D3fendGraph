@@ -1,0 +1,10 @@
+openai
+neo4j
+fastapi
+uvicorn
+langchain
+langchain-openai
+langchain-community
+tiktoken
+numpy
+httpx

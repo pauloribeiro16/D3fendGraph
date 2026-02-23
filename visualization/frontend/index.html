@@ -4,100 +4,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UnifiedThreatGraph Visualizer</title>
-    <!-- Modern Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Cytoscape for graph visualization -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.23.0/cytoscape.min.js"></script>
-    <link rel="stylesheet" href="styles.css">
+    <title>UnifiedThreatGraph — Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: auto;
+        }
+
+        .hub {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px;
+            gap: 2.5rem;
+            text-align: center;
+        }
+
+        .hub-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #79c0ff, #d2a8ff 50%, #3fb950);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .hub-sub {
+            color: var(--muted);
+            font-size: 1rem;
+            max-width: 520px;
+            line-height: 1.6;
+            margin-top: -1rem;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--sidebar-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.75rem 1.5rem;
+            text-decoration: none;
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            backdrop-filter: blur(10px);
+            text-align: left;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border-color: var(--card-color, var(--border));
+        }
+
+        .card .icon {
+            font-size: 1.8rem;
+        }
+
+        .card .card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--card-color, var(--text));
+        }
+
+        .card .card-desc {
+            font-size: 0.8rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .card .card-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1px 8px;
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+    </style>
 </head>
 
 <body>
 
-    <!-- Glassmorphic Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <h1>UnifiedThreatGraph</h1>
-            <p>CAPEC, CWE, ATT&CK, ATLAS & D3FEND</p>
+    <nav>
+        <a href="index.html" class="logo">UnifiedThreatGraph</a>
+        <a href="index.html" class="nav-btn active">🏠 Hub</a>
+        <a href="d3fend.html" class="nav-btn" data-fw="d3fend">D3FEND</a>
+        <a href="cwe.html" class="nav-btn" data-fw="cwe">CWE</a>
+        <a href="capec.html" class="nav-btn" data-fw="capec">CAPEC</a>
+        <a href="attack.html" class="nav-btn" data-fw="attack">ATT&amp;CK</a>
+        <a href="atlas.html" class="nav-btn" data-fw="atlas">ATLAS</a>
+        <a href="dss.html" class="nav-btn" data-fw="dss">🤖 DSS</a>
+        <a href="relationships.html" class="nav-btn" data-fw="relationships">🔗 Chains</a>
+    </nav>
+
+    <div class="hub">
+        <div>
+            <div class="hub-title">Unified Threat Graph</div>
+            <p class="hub-sub">A knowledge graph explorer for security frameworks and AI-powered threat analysis. Choose
+                a framework to explore.</p>
         </div>
 
-        <div class="controls">
-            <div class="control-group">
-                <label for="db-select">Database Engine</label>
-                <select id="db-select">
-                    <option value="graphdb">GraphDB (SPARQL)</option>
-                    <option value="neo4j">Neo4j (Cypher)</option>
-                </select>
-            </div>
+        <div class="cards">
+            <a href="d3fend.html" class="card" style="--card-color: #3fb950;">
+                <div class="icon">🛡️</div>
+                <div class="card-title">D3FEND</div>
+                <div class="card-desc">MITRE defensive techniques mapped to ATT&amp;CK attack patterns. Explore
+                    countermeasures and protective strategies.</div>
+                <div class="card-badges">
+                    <span class="badge">Defensive Techniques</span>
+                    <span class="badge">SPARQL + Cypher</span>
+                </div>
+            </a>
 
-            <div class="control-group">
-                <label for="domain-select">Graph Domain</label>
-                <select id="domain-select">
-                    <option value="d3fend">D3FEND</option>
-                    <option value="capec">CAPEC</option>
-                    <option value="cwe">CWE</option>
-                    <option value="attack">MITRE ATT&CK</option>
-                    <option value="atlas">ATLAS</option>
-                </select>
-            </div>
+            <a href="cwe.html" class="card" style="--card-color: #58a6ff;">
+                <div class="icon">⚠️</div>
+                <div class="card-title">CWE</div>
+                <div class="card-desc">Common Weakness Enumeration — hierarchical taxonomy of 944+ software and hardware
+                    weaknesses with parent-child relationships.</div>
+                <div class="card-badges">
+                    <span class="badge">944 Weaknesses</span>
+                    <span class="badge">1317 Edges</span>
+                    <span class="badge">Hierarchy Tree</span>
+                </div>
+            </a>
 
-            <div class="control-group">
-                <label for="query-select">Predefined Query</label>
-                <select id="query-select">
-                    <!-- Loaded dynamically via JS -->
-                </select>
-            </div>
+            <a href="capec.html" class="card" style="--card-color: #d2a8ff;">
+                <div class="icon">👺</div>
+                <div class="card-title">CAPEC</div>
+                <div class="card-desc">Common Attack Pattern Enumeration and Classification dictionary and taxonomy.
+                </div>
+                <div class="badge">Attack Patterns</div>
+            </a>
 
-            <button id="run-btn" class="primary-btn">Execute Query</button>
+            <a href="attack.html" class="card" style="--card-color: #f85149;">
+                <div class="icon">⚔️</div>
+                <div class="card-title">ATT&amp;CK</div>
+                <div class="card-desc">Globally-accessible knowledge base of adversary tactics and techniques.</div>
+                <div class="badge">Enterprise Techniques</div>
+            </a>
+
+            <a href="atlas.html" class="card" style="--card-color: #3fb950;">
+                <div class="icon">🧪</div>
+                <div class="card-title">ATLAS</div>
+                <div class="card-desc">Adversarial Threat Landscape for Artificial-Intelligence Systems.</div>
+                <div class="badge">AI Threats</div>
+            </a>
+
+            <a href="dss.html" class="card" style="--card-color: #9333ea;">
+                <div class="icon">🤖</div>
+                <div class="card-title">AI-Driven DSS</div>
+                <div class="card-desc">RAG-powered Decision Support System. Describe a security requirement and get
+                    AI-generated threat analysis and recommendations.</div>
+                <div class="card-badges">
+                    <span class="badge">RAG</span>
+                    <span class="badge">Ollama / OpenAI</span>
+                    <span class="badge">All Frameworks</span>
+                </div>
+            </a>
         </div>
+    </div>
 
-        <div id="status-panel" class="status-panel">
-            <span class="status-indicator"></span>
-            <span class="status-text">Ready</span>
-            <div class="metrics">
-                <div class="metric"><span id="record-count">0</span> records</div>
-                <div class="metric"><span id="query-time">0</span> ms</div>
-            </div>
-        </div>
-    </aside>
-
-    <!-- Main Content Area -->
-    <main class="main-content">
-        <!-- View Toggle -->
-        <div class="view-toggle">
-            <button class="toggle-btn active" data-target="graph">Graph View</button>
-            <button class="toggle-btn" data-target="table">Table View</button>
-        </div>
-
-        <!-- Cytoscape Container -->
-        <div id="graph-container" class="view-container active">
-            <div id="cy"></div>
-        </div>
-
-        <!-- Table Container -->
-        <div id="table-container" class="view-container">
-            <div class="table-wrapper">
-                <table id="data-table">
-                    <thead>
-                        <tr id="table-header">
-                            <!-- Headers injected via JS -->
-                        </tr>
-                    </thead>
-                    <tbody id="table-body">
-                        <!-- Rows injected via JS -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Loading Overlay -->
-        <div id="loading" class="loading-overlay hidden">
-            <div class="spinner"></div>
-            <p>Executing Query...</p>
-        </div>
-    </main>
-
-    <script src="app.js"></script>
 </body>
 
 </html>

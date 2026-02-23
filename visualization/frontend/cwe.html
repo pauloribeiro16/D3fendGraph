@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CWE Weakness Viewer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.23.0/cytoscape.min.js"></script>
+    <link rel="stylesheet" href="shared.css">
+    <style>
+        /* CWE accent overrides */
+        .run-btn {
+            background: linear-gradient(135deg, #1158a0, #1f6feb);
+        }
+
+        .run-btn:hover {
+            box-shadow: 0 4px 12px rgba(31, 111, 235, 0.4);
+        }
+
+        /* Info card for selected weakness */
+        .info-card {
+            background: var(--sidebar-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.9rem 1rem;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            color: var(--muted);
+            display: none;
+        }
+
+        .info-card.visible {
+            display: block;
+        }
+
+        .info-card .cwe-id {
+            color: var(--blue);
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .info-card .cwe-name {
+            color: var(--text);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-card .badge {
+            display: inline-block;
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.25);
+            border-radius: 10px;
+            padding: 1px 8px;
+            font-size: 0.73rem;
+            margin-bottom: 6px;
+        }
+
+        .info-card .section-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: var(--muted);
+            margin-top: 0.6rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .info-card .section-body {
+            color: var(--text);
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a href="index.html" class="logo">UnifiedThreatGraph</a>
+        <a href="index.html" class="nav-btn">🏠 Hub</a>
+        <a href="d3fend.html" class="nav-btn" data-fw="d3fend">D3FEND</a>
+        <a href="cwe.html" class="nav-btn active" data-fw="cwe">CWE</a>
+        <a href="capec.html" class="nav-btn" data-fw="capec">CAPEC</a>
+        <a href="attack.html" class="nav-btn" data-fw="attack">ATT&amp;CK</a>
+        <a href="atlas.html" class="nav-btn" data-fw="atlas">ATLAS</a>
+        <a href="dss.html" class="nav-btn" data-fw="dss">🤖 DSS</a>
+        <a href="relationships.html" class="nav-btn" data-fw="relationships">🔗 Chains</a>
+    </nav>
+
+    <div class="page-body">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div>
+                <div class="sidebar-title" style="color:var(--blue);">CWE Weaknesses</div>
+                <div class="sidebar-desc">Common Weakness Enumeration — hierarchical taxonomy of software and hardware
+                    weaknesses.</div>
+            </div>
+
+            <div class="ctrl-group">
+                <label class="ctrl-label">Database</label>
+                <select id="db-sel">
+                    <option value="neo4j">Neo4j (Cypher)</option>
+                    <option value="graphdb">GraphDB (SPARQL)</option>
+                </select>
+            </div>
+
+            <div class="ctrl-group">
+                <label class="ctrl-label">Query</label>
+                <select id="query-sel">
+                    <optgroup label="📋 Views &amp; Lists">
+                        <option value="Q1_all_cwe">📊 Full CWE Hierarchy</option>
+                        <option value="Q2_cwe_top25">🏆 Top-25 Most Dangerous (2024)</option>
+                        <option value="Q5_cwe_software_dev">🖥️ Software Development View (699)</option>
+                        <option value="Q_pillars_tree">🌲 Pillars &amp; Hierarchy</option>
+                    </optgroup>
+                    <optgroup label="🛡️ Security Domains">
+                        <option value="Q3_cwe_injection_family">💉 Injection (SQL, XSS, Command…)</option>
+                        <option value="Q4_cwe_memory_safety">🔐 Memory Safety (Buffer, Overflow, UAF)</option>
+                        <option value="Q_auth">🔑 Authentication &amp; Session Errors</option>
+                        <option value="Q_authz">🛡️ Authorization &amp; Access Control</option>
+                        <option value="Q_crypto">🔒 Cryptographic Issues</option>
+                        <option value="Q_input_val">✅ Input Validation Failures</option>
+                        <option value="Q_web">🌐 Web Application Security</option>
+                        <option value="Q_credentials">🗝️ Credentials &amp; Secrets Management</option>
+                        <option value="Q_concurrency">⚡ Concurrency &amp; Race Conditions</option>
+                        <option value="Q_resource">📦 Resource Management Errors</option>
+                    </optgroup>
+                    <optgroup label="🔥 Exploitability">
+                        <option value="Q_high_exploit">🔥 High Likelihood of Exploit</option>
+                        <option value="Q_medium_exploit">⚠️ Medium Likelihood of Exploit</option>
+                        <option value="Q_confidentiality">🕵️ Confidentiality Impact</option>
+                        <option value="Q_rce">💣 Remote Code Execution Risk</option>
+                    </optgroup>
+                    <optgroup label="🏛️ Abstraction Level">
+                        <option value="Q_pillars">🏛️ Pillar Weaknesses</option>
+                        <option value="Q_classes">🏗️ Class-Level Weaknesses</option>
+                        <option value="Q_bases">🔩 Base-Level Weaknesses</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <div class="ctrl-group">
+                <label class="ctrl-label">Layout</label>
+                <select id="layout-sidebar">
+                    <option value="breadthfirst">Tree (best for CWE)</option>
+                    <option value="cose">Force-directed</option>
+                    <option value="concentric">Concentric</option>
+                    <option value="circle">Circle</option>
+                    <option value="grid">Grid</option>
+                </select>
+            </div>
+
+            <button class="run-btn" id="run-btn">Run Query</button>
+
+            <!-- Node detail card shows here when a node is clicked -->
+            <div class="info-card" id="info-card">
+                <div class="cwe-id" id="ic-id">—</div>
+                <div class="cwe-name" id="ic-name"></div>
+                <div id="ic-badges" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;"></div>
+                <div class="section-label">Description</div>
+                <div class="section-body" id="ic-desc">—</div>
+                <div id="ic-ext-wrap">
+                    <div class="section-label">Extended Description</div>
+                    <div class="section-body" id="ic-ext">—</div>
+                </div>
+                <div id="ic-platforms-wrap">
+                    <div class="section-label">Platforms</div>
+                    <div class="section-body" id="ic-platforms">—</div>
+                </div>
+                <div id="ic-consequences-wrap">
+                    <div class="section-label">Consequences</div>
+                    <div class="section-body" id="ic-consequences">—</div>
+                </div>
+                <div id="ic-mitigations-wrap">
+                    <div class="section-label">Mitigations</div>
+                    <div class="section-body" id="ic-mitigations">—</div>
+                </div>
+                <div id="ic-detection-wrap">
+                    <div class="section-label">Detection</div>
+                    <div class="section-body" id="ic-detection">—</div>
+                </div>
+            </div>
+
+            <div class="metrics-row">
+                <div>Nodes: <span id="node-count">0</span></div>
+                <div>Edges: <span id="edge-count">0</span></div>
+                <div><span id="query-time">—</span> ms</div>
+            </div>
+        </aside>
+
+        <!-- Main Graph Area -->
+        <main class="main-area">
+            <div class="view-toggle">
+                <button class="vtbtn active" data-target="graph">Graph</button>
+                <button class="vtbtn" data-target="table">Table</button>
+            </div>
+
+            <!-- Graph Panel -->
+            <div id="graph-panel" class="panel active">
+                <div id="cy"></div>
+
+                <!-- Toolbar -->
+                <div class="graph-toolbar">
+                    <div class="toolbar-search">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" style="opacity:0.5">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <input type="text" id="search" placeholder="Search CWEs…">
+                        <button id="search-clear">×</button>
+                    </div>
+                    <select class="layout-sel" id="layout-sel">
+                        <option value="breadthfirst">Tree</option>
+                        <option value="cose">Force</option>
+                        <option value="concentric">Concentric</option>
+                        <option value="circle">Circle</option>
+                        <option value="grid">Grid</option>
+                    </select>
+                    <div class="zoom-controls">
+                        <button class="zoom-btn" id="zi">+</button>
+                        <button class="zoom-btn" id="zf">⊡</button>
+                        <button class="zoom-btn" id="zo">−</button>
+                    </div>
+                </div>
+
+                <!-- Loading overlay -->
+                <div class="inner-loading hidden" id="loading">
+                    <div class="spinner"></div>
+                    <p style="font-size:0.85rem;color:#8b949e;">Loading CWE data…</p>
+                </div>
+            </div>
+
+            <!-- Table Panel -->
+            <div id="table-panel" class="panel">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr id="thead"></tr>
+                        </thead>
+                        <tbody id="tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="core.js"></script>
+    <script>
+        let cy;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            cy = initCy(document.getElementById('cy'), '#58a6ff');
+
+            // Node click → sidebar card (full detail)
+            cy.on('tap', 'node', evt => {
+                const d = evt.target.data();
+
+                document.getElementById('ic-id').textContent = d.id || '—';
+                document.getElementById('ic-name').textContent = d.label || '—';
+
+                // Badges: abstraction + likelihood
+                const badges = document.getElementById('ic-badges');
+                badges.innerHTML = '';
+                if (d.abstraction) badges.innerHTML += `<span class="badge" style="border-color:rgba(210,168,255,.3);background:rgba(210,168,255,.08);color:#d2a8ff;">${d.abstraction}</span>`;
+                if (d.likelihood) badges.innerHTML += `<span class="badge">Exploit: ${d.likelihood}</span>`;
+
+                document.getElementById('ic-desc').textContent = d.description || '—';
+
+                const ext = d.ext_desc || '';
+                document.getElementById('ic-ext-wrap').style.display = ext ? '' : 'none';
+                document.getElementById('ic-ext').textContent = ext;
+
+                try {
+                    const plats = JSON.parse(d.platforms || '[]');
+                    document.getElementById('ic-platforms-wrap').style.display = plats.length ? '' : 'none';
+                    document.getElementById('ic-platforms').textContent = plats.join(', ');
+                } catch (e) { document.getElementById('ic-platforms-wrap').style.display = 'none'; }
+
+                try {
+                    const cons = JSON.parse(d.consequences || '[]');
+                    document.getElementById('ic-consequences-wrap').style.display = cons.length ? '' : 'none';
+                    document.getElementById('ic-consequences').textContent =
+                        cons.map(c => `${c.scope}: ${c.impact}${c.note ? ' — ' + c.note : ''}`).join('\n');
+                } catch (e) { document.getElementById('ic-consequences-wrap').style.display = 'none'; }
+
+                try {
+                    const mits = JSON.parse(d.mitigations || '[]');
+                    document.getElementById('ic-mitigations-wrap').style.display = mits.length ? '' : 'none';
+                    document.getElementById('ic-mitigations').textContent =
+                        mits.map(m => `[${(m.phases || []).join(', ')}] ${m.description}`).join('\n\n');
+                } catch (e) { document.getElementById('ic-mitigations-wrap').style.display = 'none'; }
+
+                try {
+                    const dets = JSON.parse(d.detection || '[]');
+                    document.getElementById('ic-detection-wrap').style.display = dets.length ? '' : 'none';
+                    document.getElementById('ic-detection').textContent =
+                        dets.map(det => `${det.method} (${det.effectiveness || '?'}): ${det.description}`).join('\n\n');
+                } catch (e) { document.getElementById('ic-detection-wrap').style.display = 'none'; }
+
+                document.getElementById('info-card').classList.add('visible');
+            });
+
+
+            cy.on('tap', evt => {
+                if (evt.target === cy) document.getElementById('info-card').classList.remove('visible');
+            });
+
+            // View toggle
+            document.querySelectorAll('.vtbtn').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    document.querySelectorAll('.vtbtn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+                    e.target.classList.add('active');
+                    document.getElementById(`${e.target.dataset.target}-panel`).classList.add('active');
+                    if (e.target.dataset.target === 'graph') setTimeout(() => cy.fit(undefined, 40), 50);
+                });
+            });
+
+            // Sync sidebar layout select with toolbar select
+            document.getElementById('layout-sidebar').addEventListener('change', e => {
+                document.getElementById('layout-sel').value = e.target.value;
+                if (cy) runLayout(cy, e.target.value);
+            });
+
+            // Toolbar
+            wireToolbar(cy, {
+                searchInput: document.getElementById('search'),
+                clearBtn: document.getElementById('search-clear'),
+                layoutSel: document.getElementById('layout-sel'),
+                zoomIn: document.getElementById('zi'),
+                zoomOut: document.getElementById('zo'),
+                zoomFit: document.getElementById('zf')
+            });
+
+            document.getElementById('run-btn').addEventListener('click', runQuery);
+            runQuery(); // auto-load
+        });
+
+        async function runQuery() {
+            const db = document.getElementById('db-sel').value;
+            const queryId = document.getElementById('query-sel').value;
+            const layout = document.getElementById('layout-sidebar').value;
+
+            document.getElementById('loading').classList.remove('hidden');
+
+            try {
+                const t0 = performance.now();
+
+                // Flat scan of ALL CWE nodes — no limit, no joins (faster, covers all 969)
+                const richCypher = `
+                    MATCH (n:CWE)
+                    RETURN n.id AS id, n.name AS name,
+                           n.description AS description,
+                           n.extended_description AS extDesc,
+                           n.abstraction AS abstraction,
+                           n.likelihood AS likelihood,
+                           n.platforms AS platforms,
+                           n.consequences AS consequences,
+                           n.mitigations AS mitigations,
+                           n.detection AS detection
+                `;
+
+                // Fetch query string from backend for the selected query
+                const qRes = await fetch(`${API}/domains/cwe/queries/${queryId}`);
+                const qObj = await qRes.json();
+                const queryStr = db === 'graphdb' ? qObj.sparql : qObj.cypher;
+
+                // Execute the selected query for shape/topology
+                const res = await fetch(`${API}/${db}/query`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: queryStr })
+                });
+                const raw = await res.json();
+                const rows = normalise(db, raw);
+
+                // Fetch rich properties for ALL CWEs (used on node click)
+                const richRes = await fetch(`${API}/neo4j/query`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: richCypher })
+                });
+                const richRaw = await richRes.json();
+                // Index by CWE id so any node (child or parent) is found
+                const richMap = {};
+                (richRaw?.data || []).forEach(r => { if (r.id) richMap[r.id] = r; });
+
+                const ms = Math.round(performance.now() - t0);
+
+                const elements = buildElements(rows, {
+                    nodeColor: '#58a6ff',
+                    parentColor: '#d2a8ff',
+                    relLabel: 'CHILD_OF'
+                });
+
+                cy.elements().remove();
+                cy.add(elements);
+
+                // Attach all rich properties to each node for the click handler
+                cy.nodes().forEach(n => {
+                    const r = richMap[n.id()];
+                    if (r) {
+                        n.data('description', r.description || '');
+                        n.data('ext_desc', r.extDesc || '');
+                        n.data('abstraction', r.abstraction || '');
+                        n.data('likelihood', r.likelihood || '');
+                        n.data('platforms', r.platforms || '[]');
+                        n.data('consequences', r.consequences || '[]');
+                        n.data('mitigations', r.mitigations || '[]');
+                        n.data('detection', r.detection || '[]');
+                    }
+                });
+
+                runLayout(cy, layout);
+
+                document.getElementById('node-count').textContent = cy.nodes().length;
+                document.getElementById('edge-count').textContent = cy.edges().length;
+                document.getElementById('query-time').textContent = ms;
+
+                renderTable(rows, document.getElementById('thead'), document.getElementById('tbody'));
+
+            } catch (e) {
+                console.error(e);
+                alert('Query failed: ' + e.message);
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+
+</html>

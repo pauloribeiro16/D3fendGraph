@@ -1,0 +1,4 @@
+Visualization backend running on http://localhost:3000
+Neo4j Error: Query cannot conclude with MATCH (must be a RETURN clause, an update clause, a unit subquery call, or a procedure call with no YIELD) (line 2, column 1 (offset: 17))
+"                MATCH (w:CWE)-[:MEMBER_OF]->(cat:CWECategory)"
+                 ^

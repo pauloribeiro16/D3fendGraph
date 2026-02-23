@@ -2,111 +2,112 @@
 
 > **Aggregating CAPEC, CWE, MITRE ATT&CK, ATLAS & D3FEND**
 > **Phase 1 of 2** — SPARQL/GraphDB evaluation.
-> Neo4j phase comes after you validate these results.
+
+This project integrates multiple MITRE security frameworks into a single GraphDB (RDF) knowledge base and provides a visualization dashboard to explore them.
 
 ## Prerequisites
 
-- Node.js (for the Visualization Backend)
-- Docker + Docker Compose installed and running
-- Python 3.8+ (standard library only, no pip installs needed)
-- Internet access (to download the D3FEND ontology and other STIX/JSON data)
+- **Node.js**: required for the Visualization Backend.
+- **Docker + Docker Compose**: installed and running (e.g., Docker Desktop on Mac/Windows).
+- **Python 3.8+**: required for the ingestion scripts and the frontend server.
+- **Internet access**: necessary to download the D3FEND ontology and the STIX/JSON datasets.
 
 ---
 
-## Step 1 — Start and Load
+## Step 1 — Start GraphDB and Load D3FEND
+
+The `bootstrap.sh` script starts GraphDB in a Docker container, creates the required repository with OWL-RL reasoning, and downloads & ingests the D3FEND ontology.
 
 ```bash
-cd d3fend-test
-
 # Make the bootstrap script executable
 chmod +x scripts/bootstrap.sh
 
-# Run it — this does everything:
-# 1. Starts GraphDB in Docker
-# 2. Creates the 'd3fend' repository with OWL-RL reasoning
-# 3. Downloads the D3FEND .ttl file
-# 4. Loads it into GraphDB
-# 5. Verifies with a triple count
+# Run the script (Wait 1-3 minutes)
 ./scripts/bootstrap.sh
 ```
 
 **Expected output:**
-```
+```text
 [INFO] GraphDB is up!
 [INFO] Repository 'd3fend' created.
-[INFO] Downloaded to ./graphdb/import/d3fend.ttl
-[INFO] Import complete!
-[INFO] Triple count in repository: ~180000
-[INFO] ✅ D3FEND loaded successfully!
-
-  GraphDB Workbench: http://localhost:7200
-  SPARQL Endpoint:   http://localhost:7200/repositories/d3fend
-  Run queries:       python3 scripts/run_queries.py
+[INFO] ✅ D3FEND loaded successfully with ~194000 triples!
 ```
 
-## Step 2 — Inject Secondary Framework Data
-To properly use UnifiedThreatGraph, inject the JSON data for CAPEC, CWE, and MITRE ATT&CK into the Neo4j and GraphDB databases:
+---
+
+## Step 2 — Inject Secondary Frameworks (CAPEC, CWE, ATT&CK, ATLAS)
+
+We need to download the secondary STIX/JSON datasets and inject them into GraphDB.
 
 ```bash
-# Fetch extra JSON data (CAPEC) if it does not exist
+# 1. Create a Python Virtual Environment
+python3 -m venv venv
+source venv/bin/activate
+
+# 2. Install python dependencies
+pip install requests neo4j
+
+# 3. Create the data directory
 mkdir -p data
-curl -s -L -o data/capec.json https://raw.githubusercontent.com/mitre/cti/master/capec/stix/capec.json
-# Ensure CWE and ATT&CK json files are present in the data folder.
-# Run the python ingestor (this may take a few minutes)
+
+# 4. Download datasets
+# Fetch CWE
+python3 scripts/fetch_cwe.py
+# Download CAPEC
+curl -s -L -o data/capec.json "https://raw.githubusercontent.com/mitre/cti/master/capec/2.1/stix-capec.json"
+# Download ATT&CK
+curl -s -L -o data/mitre_attack_enterprise.json "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json"
+# Download ATLAS
+curl -s -L -o data/atlas.json "https://raw.githubusercontent.com/mitre-atlas/atlas-navigator-data/main/dist/stix-atlas.json"
+
+# 5. Inject threats into GraphDB and Neo4j
 python3 scripts/inject_threats.py
 ```
 
-## Step 3 — Start the Visualization Server
-The project includes a web visualization dashboard and Node.js proxy server.
+---
 
+## Step 3 — Start the Visualization Server
+
+The project includes a web visualization dashboard and a Node.js proxy server. You will need two terminal windows for this step.
+
+**Terminal 1 (Backend API proxy):**
 ```bash
-# Start backend server proxy
 cd visualization/backend
 npm install
 node server.js
+# Runs on port 3000
 ```
 
+**Terminal 2 (Frontend UI):**
 ```bash
-# In another terminal window, start the frontend UI
 cd visualization/frontend
 python3 -m http.server 8001
+# Runs on port 8001
 ```
 
 Access the Visualizer Application at **[http://localhost:8001](http://localhost:8001)**.
 
 ---
 
-## Step 2 — Explore the Workbench (Optional but Recommended)
+## Step 4 — Run the Query Suite
 
-Open your browser at **http://localhost:7200**
-
-- Go to **Repositories** → confirm `d3fend` exists
-- Go to **SPARQL** → try a quick query:
-
-```sparql
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT * WHERE { ?s rdfs:label ?l } LIMIT 10
-```
-
----
-
-## Step 3 — Run the Query Suite
+Now that the GraphDB repository is populated with all frameworks, you can test the SPARQL queries.
 
 ```bash
-# Run all queries
-python3 scripts/run_queries.py
+# Activate python env (if not already activated)
+source venv/bin/activate
 
-# Run only technique→countermeasure queries
-python3 scripts/run_queries.py --query technique
+# Run all predefined queries
+python3 run_queries.py
 
-# Run only category/tactic queries
-python3 scripts/run_queries.py --query category
+# Run only secondary framework queries (CAPEC, CWE, ATLAS)
+python3 run_queries.py --query secondary_frameworks
 
-# Run a custom keyword search (most useful for exploration)
-python3 scripts/run_queries.py --search "ransomware"
-python3 scripts/run_queries.py --search "network traffic"
-python3 scripts/run_queries.py --search "authentication"
-python3 scripts/run_queries.py --search "encryption"
+# Run only cross-framework queries
+python3 run_queries.py --query cross_framework
+
+# Run an interactive keyword search across D3FEND
+python3 run_queries.py --search "ransomware"
 ```
 
 ---
@@ -123,68 +124,29 @@ python3 scripts/run_queries.py --search "encryption"
 | `Q6_detect_techniques` | All "Detect" techniques |
 | `Q7_coverage_priority` | Top controls ranked by ATT&CK coverage breadth |
 | `Q8_data_protection` | Encryption, access control, auth techniques |
+| `Q9-Q11` | Overviews of CWE, CAPEC, and ATLAS |
+| `Q12_injection_across_frameworks` | Cross-framework search for "injection" related vulnerabilities/patterns |
+| `Q13_phishing_across_frameworks` | Cross-framework search for "phishing" related vulnerabilities/patterns |
 
 ---
 
-## D3FEND Namespace Cheat Sheet
+## Explore the GraphDB Workbench
 
-```sparql
-PREFIX d3f:  <https://d3fend.mitre.org/ontologies/d3fend.owl#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+Open your browser at **http://localhost:7200**.
+- Go to **Repositories** → confirm `d3fend` exists.
+- Go to **SPARQL** to write custom queries directly against the knowledge graph.
 
--- Key classes --
-d3f:DefensiveTechnique    -- root of all countermeasures
-d3f:Harden                -- preventative hardening techniques
-d3f:Detect                -- detection techniques
-d3f:Isolate               -- isolation techniques
-d3f:Deceive               -- deception techniques
-d3f:Evict                 -- eviction/remediation techniques
+### Troubleshooting
 
--- Key properties --
-d3f:counters              -- links D3FEND technique → ATT&CK technique
-d3f:d3fend-id             -- D3FEND identifier (e.g. D3-AH)
-d3f:definition            -- human-readable definition
-d3f:analyzes              -- what artifact the technique analyzes
-d3f:monitors              -- what artifact it monitors
-d3f:filters               -- what it filters
-```
-
----
-
-## Troubleshooting
-
-**GraphDB doesn't start:**
-```bash
-docker compose logs graphdb
-# Usually a port conflict — check if 7200 is already in use
-```
-
-**Import seems stuck:**
-```bash
-# Check import status
-curl http://localhost:7200/rest/repositories/d3fend/import/server
-# Or use the Workbench UI → Import → Server files
-```
-
-**No results from queries:**
-```bash
-# Verify triple count
-curl -H "Accept: application/sparql-results+json" \
-  "http://localhost:7200/repositories/d3fend?query=SELECT+(COUNT(*)+as+%3Fc)+WHERE+%7B+%3Fs+%3Fp+%3Fo+%7D"
-```
-
-**Stop everything:**
-```bash
-docker compose down
-```
+- **GraphDB doesn't start:** Run `docker compose logs graphdb` (usually a port 7200 conflict).
+- **Import fails / stops:** Ensure your `config.ttl` is updated for GraphDB 10.6.0 (removing FreeSail references).
+- **No results from queries in GraphDB:** Check the GraphDB repository triple count using `SELECT (COUNT(*) as ?c) WHERE { ?s ?p ?o }`. Note that some queries expect the `d3fend` name to be exact due to graph bindings. 
 
 ---
 
 ## What's Next (Phase 2 — Neo4j)
 
-Once you've validated SPARQL results here, we'll:
-1. Set up Neo4j alongside GraphDB in the same compose file
-2. Use **neosemantics (n10s)** to import D3FEND as a property graph
-3. Write equivalent Cypher queries
-4. Compare: query complexity, result richness, LLM integration ease
+We have already set up a Neo4j container in the `docker-compose.yml`.
+1. Use **neosemantics (n10s)** to analyze the GraphDB loaded STIX objects.
+2. Write equivalent Cypher queries for the property graph.
+3. Compare SPARQL and Cypher approaches.

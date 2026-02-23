@@ -54,7 +54,7 @@ if [ "$EXISTING" -gt 0 ]; then
 else
   curl -sf -X POST "$GRAPHDB_URL/rest/repositories" \
     -H "Content-Type: multipart/form-data" \
-    -F "config=@./graphdb/config/d3fend/config.ttl;type=text/turtle" \
+    -F "config=@./config.ttl;type=text/turtle" \
     && info "Repository '$REPO_ID' created." \
     || error "Failed to create repository. Check GraphDB logs."
 fi
@@ -77,7 +77,9 @@ info "Loading D3FEND ontology into GraphDB repository '$REPO_ID'..."
 info "This may take 1-3 minutes depending on your machine..."
 
 # Copy to the GraphDB import folder (mapped volume)
-cp "$D3FEND_FILE" "$IMPORT_DIR/d3fend.ttl"
+if [ "$D3FEND_FILE" != "$IMPORT_DIR/d3fend.ttl" ]; then
+  cp "$D3FEND_FILE" "$IMPORT_DIR/d3fend.ttl"
+fi
 
 # Trigger import via REST API
 RESPONSE=$(curl -sf -X POST \
