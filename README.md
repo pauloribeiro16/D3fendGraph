@@ -5,6 +5,29 @@
 
 This project integrates multiple MITRE security frameworks into a single GraphDB (RDF) knowledge base and provides a visualization dashboard to explore them.
 
+## Screenshots
+
+Here are some examples of the framework visualizations provided by the unified dashboard:
+
+### Multi-Framework Kill Chains
+![CAPEC to CWE to ATT&CK Kill Chain](assets/images/capec_cwe_attack_graph.png)
+*Visualizing a multi-framework Kill Chain mapping Attack Patterns (CAPEC, Purple) to Weaknesses (CWE, Red) and ultimately the adversarial Techniques (ATT&CK, Blue).*
+
+### Framework Overviews
+![Hub Page Updates](assets/images/landing_page.png)
+*Unified Hub with easy navigation to individual framework cards.*
+
+### Deep ATT&CK Queries
+![Groups and Software](assets/images/groups_software_graph.png)
+*Visualizing Threat Actor Groups and the Malware/Tools they employ.*
+
+![Mobile Techniques](assets/images/mobile_related_techniques_graph.png)
+*Visualizing Mobile-specific (Android/iOS) Techniques.*
+
+### D3FEND Defensive Analysis
+![D3FEND Final Verification](assets/images/d3fend_final_verify.webp)
+*Visualizing countermeasure domains and their related mitigations.*
+
 ## Prerequisites
 
 - **Node.js**: required for the Visualization Backend.
