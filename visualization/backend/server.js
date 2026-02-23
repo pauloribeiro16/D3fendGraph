@@ -12,14 +12,14 @@ app.use(cors());
 app.use(express.json());
 
 // --- Setup GraphDB / SPARQL ---
-const GRAPHDB_URL = "http://localhost:7200";
-const REPO_ID = "d3fend";
+const GRAPHDB_URL = process.env.GRAPHDB_URL || "http://localhost:7200";
+const REPO_ID = process.env.REPO_ID || "d3fend";
 const SPARQL_URL = `${GRAPHDB_URL}/repositories/${REPO_ID}`;
 
 // --- Setup Neo4j / Cypher ---
-const NEO4J_URL = "bolt://localhost:7687";
-const NEO4J_USER = "neo4j";
-const NEO4J_PASS = "d3fendtest";
+const NEO4J_URL = process.env.NEO4J_URI || "bolt://localhost:7687";
+const NEO4J_USER = process.env.NEO4J_USER || "neo4j";
+const NEO4J_PASS = process.env.NEO4J_PASS || "d3fendtest";
 const driver = neo4j.driver(NEO4J_URL, neo4j.auth.basic(NEO4J_USER, NEO4J_PASS));
 
 // Example Queries Dictionary organized by domain

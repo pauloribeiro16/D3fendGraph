@@ -1,0 +1,17 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install curl, git, and required Python packages
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+RUN pip install requests neo4j
+
+# Copy all scripts into the container
+COPY scripts/ /app/scripts/
+
+# Copy the entrypoint script
+COPY scripts/init_entrypoint.sh /app/init_entrypoint.sh
+RUN chmod +x /app/init_entrypoint.sh
+
+# The entrypoint will orchestrate downloads and injections
+ENTRYPOINT ["/app/init_entrypoint.sh"]

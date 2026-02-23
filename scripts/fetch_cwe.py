@@ -137,7 +137,8 @@ def _parse_weakness(w):
 
 
 def download_cwe():
-    os.makedirs('data', exist_ok=True)
+    DATA_DIR = os.environ.get('DATA_DIR', 'data')
+    os.makedirs(DATA_DIR, exist_ok=True)
 
     # ── Step 1: get View-699 (Software Development) members = category IDs ─────
     print('Fetching View-699 (Software Development)…')
@@ -208,13 +209,15 @@ def download_cwe():
     print(f'  Parsed {len(cwes)} weaknesses')
 
     # ── Save ────────────────────────────────────────────────────────────────────
-    with open('data/cwe_parsed.json', 'w') as f:
+    parsed_path = os.path.join(DATA_DIR, 'cwe_parsed.json')
+    with open(parsed_path, 'w') as f:
         json.dump(cwes, f, indent=2)
-    print(f'Saved {len(cwes)} CWEs → data/cwe_parsed.json')
+    print(f'Saved {len(cwes)} CWEs → {parsed_path}')
 
-    with open('data/cwe_categories.json', 'w') as f:
+    cat_path = os.path.join(DATA_DIR, 'cwe_categories.json')
+    with open(cat_path, 'w') as f:
         json.dump(categories, f, indent=2)
-    print(f'Saved {len(categories)} categories → data/cwe_categories.json')
+    print(f'Saved {len(categories)} categories → {cat_path}')
 
     return cwes, categories
 

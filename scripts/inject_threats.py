@@ -1,15 +1,18 @@
 import json
 import requests
+import os
 from neo4j import GraphDatabase
 
-NEO4J_URI = "bolt://localhost:7687"
-NEO4J_AUTH = ("neo4j", "d3fendtest")
+NEO4J_URI = os.environ.get("NEO4J_URI", "bolt://localhost:7687")
+auth_string = os.environ.get("NEO4J_AUTH_STRING", "neo4j/d3fendtest")
+NEO4J_AUTH = tuple(auth_string.split('/'))
 
-GRAPHDB_REPO = "http://localhost:7200/repositories/d3fend/statements"
+GRAPHDB_REPO = os.environ.get("GRAPHDB_REPO", "http://localhost:7200/repositories/d3fend/statements")
+DATA_DIR = os.environ.get("DATA_DIR", "data")
 
 def insert_cwe():
     try:
-        with open('data/cwe_parsed.json') as f:
+        with open(os.path.join(DATA_DIR, 'cwe_parsed.json')) as f:
             cwes = json.load(f)
     except Exception as e:
         print("CWE file not found:", e)
@@ -20,7 +23,7 @@ def insert_cwe():
     # Load categories if available
     categories = []
     try:
-        with open('data/cwe_categories.json') as f:
+        with open(os.path.join(DATA_DIR, 'cwe_categories.json')) as f:
             categories = json.load(f)
         print(f"Loaded {len(categories)} CWE categories")
     except Exception:
@@ -246,7 +249,7 @@ def insert_stix(file_path, label, uri_prefix):
 
 if __name__ == '__main__':
     insert_cwe()
-    insert_stix('data/capec.json', 'CAPEC', 'http://capec.mitre.org/data/definitions/')
-    insert_stix('data/mitre_attack_enterprise.json', 'ATTACK', 'http://attack.mitre.org/')
-    insert_stix('data/mitre_attack_mobile.json', 'ATTACK', 'http://attack.mitre.org/')
-    insert_stix('data/atlas.json', 'ATLAS', 'http://atlas.mitre.org/')
+    insert_stix(os.path.join(DATA_DIR, 'capec.json'), 'CAPEC', 'http://capec.mitre.org/data/definitions/')
+    insert_stix(os.path.join(DATA_DIR, 'mitre_attack_enterprise.json'), 'ATTACK', 'http://attack.mitre.org/')
+    insert_stix(os.path.join(DATA_DIR, 'mitre_attack_mobile.json'), 'ATTACK', 'http://attack.mitre.org/')
+    insert_stix(os.path.join(DATA_DIR, 'atlas.json'), 'ATLAS', 'http://atlas.mitre.org/')
