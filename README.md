@@ -24,9 +24,6 @@ Here are some examples of the framework visualizations provided by the unified d
 ![Mobile Techniques](assets/images/mobile_related_techniques_graph.png)
 *Visualizing Mobile-specific (Android/iOS) Techniques.*
 
-### D3FEND Defensive Analysis
-![D3FEND Final Verification](assets/images/d3fend_final_verify.webp)
-*Visualizing countermeasure domains and their related mitigations.*
 
 ## Prerequisites
 
