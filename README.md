@@ -27,85 +27,48 @@ Here are some examples of the framework visualizations provided by the unified d
 
 ## Prerequisites
 
-- **Node.js**: required for the Visualization Backend.
 - **Docker + Docker Compose**: installed and running (e.g., Docker Desktop on Mac/Windows).
-- **Python 3.8+**: required for the ingestion scripts and the frontend server.
-- **Internet access**: necessary to download the D3FEND ontology and the STIX/JSON datasets.
+- **Internet access**: necessary for the initializer container to download the D3FEND ontology and the STIX/JSON datasets on first boot.
+
+*(Note: Node.js and Python are no longer required on the host machine as the entire stack is fully containerized).*
 
 ---
 
-## Step 1 — Start GraphDB and Load D3FEND
+## Deployment (Automated Setup)
 
-The `bootstrap.sh` script starts GraphDB in a Docker container, creates the required repository with OWL-RL reasoning, and downloads & ingests the D3FEND ontology.
+This project uses a 5-container architecture to run out-of-the-box on any system:
+1. `graphdb`: Ontotext GraphDB
+2. `neo4j`: Neo4j Community Edition
+3. `api-backend`: Node.js API server
+4. `web-frontend`: Nginx static web server
+5. `data-initializer`: A transient Python container that handles all data ingestion.
 
-```bash
-# Make the bootstrap script executable
-chmod +x scripts/bootstrap.sh
-
-# Run the script (Wait 1-3 minutes)
-./scripts/bootstrap.sh
-```
-
-**Expected output:**
-```text
-[INFO] GraphDB is up!
-[INFO] Repository 'd3fend' created.
-[INFO] ✅ D3FEND loaded successfully with ~194000 triples!
-```
-
----
-
-## Step 2 — Inject Secondary Frameworks (CAPEC, CWE, ATT&CK, ATLAS)
-
-We need to download the secondary STIX/JSON datasets and inject them into GraphDB.
+To start the application:
 
 ```bash
-# 1. Create a Python Virtual Environment
-python3 -m venv venv
-source venv/bin/activate
-
-# 2. Install python dependencies
-pip install requests neo4j
-
-# 3. Create the data directory
-mkdir -p data
-
-# 4. Download datasets
-# Fetch CWE
-python3 scripts/fetch_cwe.py
-# Download CAPEC
-curl -s -L -o data/capec.json "https://raw.githubusercontent.com/mitre/cti/master/capec/2.1/stix-capec.json"
-# Download ATT&CK
-curl -s -L -o data/mitre_attack_enterprise.json "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json"
-# Download ATLAS
-curl -s -L -o data/atlas.json "https://raw.githubusercontent.com/mitre-atlas/atlas-navigator-data/main/dist/stix-atlas.json"
-
-# 5. Inject threats into GraphDB and Neo4j
-python3 scripts/inject_threats.py
+docker compose up -d --build
 ```
 
----
+### What happens next? (The Data Initializer)
+Because the databases start empty on a fresh machine, the `data-initializer` container automatically wakes up, waits for the databases to be healthy, and does all the heavy lifting:
+- Uses the GraphDB REST API to create the repository and upload D3FEND.
+- Downloads the latest STIX JSON datasets (CWE, CAPEC, ATT&CK Enterprise/Mobile, ATLAS).
+- Injects all STIX data into Neo4j and GraphDB.
 
-## Step 3 — Start the Visualization Server
-
-The project includes a web visualization dashboard and a Node.js proxy server. You will need two terminal windows for this step.
-
-**Terminal 1 (Backend API proxy):**
+**Monitor the setup progress:**
 ```bash
-cd visualization/backend
-npm install
-node server.js
-# Runs on port 3000
+docker compose logs -f data-initializer
 ```
+*Wait until you see:* `[INFO] Initialization completely finished! Container will now exit gracefully.`
 
-**Terminal 2 (Frontend UI):**
-```bash
-cd visualization/frontend
-python3 -m http.server 8001
-# Runs on port 8001
-```
+### Accessing the Application
 
-Access the Visualizer Application at **[http://localhost:8001](http://localhost:8001)**.
+Once the initializer finishes, the dashboard is ready to use:
+
+- **Visualizer Dashboard**: [http://localhost:8001](http://localhost:8001)
+- **Backend API**: [http://localhost:3000](http://localhost:3000)
+- **GraphDB Workbench**: [http://localhost:7200](http://localhost:7200) (SPARQL endpoint is at `/repositories/d3fend`)
+- **Neo4j Browser**: [http://localhost:7474](http://localhost:7474)
 
 ---
 
