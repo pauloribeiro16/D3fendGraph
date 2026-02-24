@@ -500,13 +500,24 @@ function renderGraph(dataArray) {
             const relType = row.relType || 'RELATED';
             const edgeId = `edge_${sId}_${tId}_${relType}`;
 
+            const getColor = (typeStr) => {
+                if (typeStr === 'D3FEND') return { color: '#3fb950', nType: 'defense' };
+                if (typeStr === 'ATTACK') return { color: '#f85149', nType: 'attack' };
+                if (typeStr === 'CWE') return { color: '#79c0ff', nType: 'attack' };
+                if (typeStr === 'CAPEC') return { color: '#d2a8ff', nType: 'attack' };
+                if (typeStr === 'ATLAS') return { color: '#3fb950', nType: 'attack' };
+                return { color: '#ffa657', nType: 'attack' };
+            };
+
             // Add nodes if missing
             if (!addedNodes.has(sId) && row.sourceName) {
-                elements.push({ data: { id: sId, label: row.sourceName, type: 'attack', borderColor: '#ffa657' } });
+                const style = getColor(row.sourceType);
+                elements.push({ data: { id: sId, label: row.sourceName, type: style.nType, borderColor: style.color } });
                 addedNodes.add(sId);
             }
             if (!addedNodes.has(tId) && row.targetName) {
-                elements.push({ data: { id: tId, label: row.targetName, type: 'attack', borderColor: '#ffa657' } });
+                const style = getColor(row.targetType);
+                elements.push({ data: { id: tId, label: row.targetName, type: style.nType, borderColor: style.color } });
                 addedNodes.add(tId);
             }
 

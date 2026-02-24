@@ -37,7 +37,7 @@ if [ "$EXISTING" -eq 0 ]; then
   echo "[INFO] Creating repository..."
   curl -sf -X POST "$GRAPHDB_URL/rest/repositories" \
     -H "Content-Type: multipart/form-data" \
-    -F "config=@/app/scripts/config.ttl;type=text/turtle"
+    -F "config=@/app/config.ttl;type=text/turtle"
 fi
 
 TRIPLE_COUNT=$(curl -sf -H "Accept: application/sparql-results+json" \
@@ -45,7 +45,7 @@ TRIPLE_COUNT=$(curl -sf -H "Accept: application/sparql-results+json" \
   --data-urlencode "query=SELECT (COUNT(*) as ?count) WHERE { ?s ?p ?o }" \
   | python -c "import sys,json; data=json.load(sys.stdin); print(data['results']['bindings'][0]['count']['value'])" 2>/dev/null || echo "0")
 
-if [ "$TRIPLE_COUNT" -eq 0 ]; then
+if [ "$TRIPLE_COUNT" -lt 100 ]; then
   echo "[INFO] Downloading D3FEND ontology..."
   curl -L -s -o /tmp/d3fend.ttl "https://d3fend.mitre.org/ontologies/d3fend.ttl"
   

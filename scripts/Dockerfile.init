@@ -11,6 +11,7 @@ COPY scripts/ /app/scripts/
 
 # Copy the entrypoint script
 COPY scripts/init_entrypoint.sh /app/init_entrypoint.sh
+COPY config.ttl /app/config.ttl
 RUN chmod +x /app/init_entrypoint.sh
 
 # The entrypoint will orchestrate downloads and injections
